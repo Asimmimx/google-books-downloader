@@ -1,2 +1,4 @@
-
-google-books-downloader crash.log
+google-books-downloader_crash.log
+backups/
+__pycache__/
+*.pyc

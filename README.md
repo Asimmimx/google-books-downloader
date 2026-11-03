@@ -1,44 +1,92 @@
 # Google Books Downloader
-An open-source utility to scrape Google Books
 
-## How to use
+Download the preview pages of a Google Books book as high-quality images and a **searchable PDF (OCR)**.
 
-### Installing
-
-**Step 0:** Python is required to run this utility. If you are new to programming, make sure to download and install the latest version of [Python](https://www.python.org/downloads) before proceeding.
-
-**Step 1:** Download/clone the code to your local machine. Install the required dependencies listed in requirements.txt
-
-(hint: run `pip3 install -r /[install-directory]/requirements.txt` from your console)
-
-**Step 2:** Run gbd.py and go get 'em books.
-
-(hint: run `python [install-directory]/gbd.py` from your console to run Google Books Downloader)
-
-### Instructions
-
-In order to download a material from Google Books, **it needs to have full or snippet view**. If a book does not have any of these, i.e. it can't be viewed on Google Books, then the utility can't (and practically, no one can) download the book.
+> Only pages that Google Books shows in **full view** or **preview** can be downloaded. If you can't read a page on Google Books, this tool can't get it either.
 
 ![Book examples](img.png)
 
-**Step 1:** After running the utility, you'll be asked whether to download from URL or, in case you have *previously* downloaded it, from backup. At this point, type "Yes".
+---
 
-If you do have a backup file, type "No", then input the address of the backup and proceed to step 4.
+## Setup (once)
 
-**Step 2:** Enter the URL of the book you want to download.
+1. Install **[Python 3.9+](https://www.python.org/downloads/)**. On Windows, tick **"Add Python to PATH"** during setup.
+2. Install **[Google Chrome](https://www.google.com/chrome/)**. You don't need to download chromedriver: the right version is fetched automatically.
+3. Install the required packages from the project folder:
+   ```
+   pip install -r requirements.txt
+   ```
+4. *(Optional, for searchable PDFs)* Install **Tesseract OCR**:
+   - Windows: `winget install UB-Mannheim.TesseractOCR` or use the [installer](https://github.com/UB-Mannheim/tesseract/wiki). During setup, tick the extra languages you need (e.g. Turkish).
+   - macOS: `brew install tesseract tesseract-lang`
+   - Linux: `sudo apt install tesseract-ocr tesseract-ocr-tur`
 
-In this step, Google Book Downloader will browse the book and fetch its pages, so you can take a short break while it does the job for you.
+   Without Tesseract you still get a normal PDF, just without selectable text.
 
-**Step 3:** After a couple minutes it'll be done processing the book. It is encouraged that you save the progress made so far and back it up. This will help you skip the previous step and save your time if you ever happen to download the same book again.
+## Usage
 
-Type Yes to create a backup, otherwise--you know.
+### The easy way
 
-**Step 4:** Type the numbers of pages you'd like to download. Note that if a page you selected is not available in the preview, it will simply be skipped.
+- **Windows:** double-click **`start.bat`**.
+- **Other systems:** run `python gbd.py`.
 
-**Step 5:** We're almost done at this step. Just enter where to save the book; leave it blank and press enter to save them in your current directory.
+Then answer the questions. Press **ENTER** to accept the default shown in `[brackets]`:
 
-Congrats! The book pages will be saved as images in the specified location in the highest quality available. You can now read them or combine in a PDF using online tools or desktop apps (I usually use Nitro or this [website](https://smallpdf.com/jpg-to-pdf) as an alternative).
+| Step | Question | Example answer |
+|------|----------|----------------|
+| 1 | Link of the book | `https://books.google.com/books?id=buc0AAAAMAAJ` |
+| 2 | Which pages | `all` or `1-50` or `1, 10-20, odd` |
+| 3 | Where to save | ENTER = the current folder |
+| 4 | Make a PDF? Use OCR? Book language? | ENTER, ENTER, `eng` (or `tur`, `deu`, `eng+tur` …) |
 
----------
+When it's done you'll have a folder named after the book containing `page0001.png`, `page0002.png`, … and `<Book title>.pdf`.
 
-DISCLAIMER OF RESPONSIBILITY: The code is provided as-is without any further warranty. It is designed solely for legal usage; the author(s) of the code are not responsible for any illegal actions done by anyone using this code. Read the License for more information.
+### One command
+
+```
+python gbd.py "https://books.google.com/books?id=buc0AAAAMAAJ" -p 1-50 -o D:\Books --lang eng
+```
+
+| Option | Meaning | Default |
+|--------|---------|---------|
+| `-p`, `--pages` | Pages to download: `all`, `5`, `10-20`, `odd`, `even`, comma-separated | `all` |
+| `-o`, `--output` | Folder to save into | current folder |
+| `-l`, `--lang` | Book language for OCR (`eng`, `tur`, `deu`, `fra`, `eng+tur` …) | `eng` |
+| `--no-ocr` | Make a plain PDF without searchable text | |
+| `--no-pdf` | Only save the images, no PDF | |
+| `--show-browser` | Show the Chrome window while scanning | |
+
+Run `python gbd.py --help` for the full list.
+
+### Backups: skip the slow part next time
+
+Scanning a book takes a few minutes, so the list of pages is saved automatically to `backups/<Book title>.json`. Next time, paste that file path instead of the link and the scanning is skipped:
+
+```
+python gbd.py "backups/Adventures of Sherlock Holmes - Sir Arthur Conan Doyle.json" -p 100-150
+```
+
+Backups from older versions (`Backup of <title>.txt`) still work.
+
+### Turn already-downloaded pages into a PDF
+
+Paste the **folder** instead of a link. The images in it are combined into a PDF (with OCR if available):
+
+```
+python gbd.py "D:\Books\My Book" --lang tur
+```
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `No preview pages found` | The book has no preview on Google Books. Check that you can read pages in your browser. |
+| Some pages are missing | Google only shows part of some books, and only those pages can be downloaded. |
+| PDF text isn't selectable | Install Tesseract (see Setup step 4) and make sure the book's language is installed. |
+| `OCR language not installed` | Re-run the Tesseract installer and tick that language. |
+| Chrome / driver errors | Update Google Chrome and run `pip install -U -r requirements.txt`. |
+| Anything else | See `google-books-downloader_crash.log` in the project folder and [open an issue](../../issues). |
+
+---
+
+DISCLAIMER: The code is provided as-is without any warranty. It is intended solely for legal use, such as public-domain books or personal backups that copyright law allows where you live. The authors are not responsible for misuse. See the [License](LICENSE).
